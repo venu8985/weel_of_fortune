@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 import 'package:spin/screens/homeScreen/home_screen.dart';
+
 class AppConfig {
   final String appName;
   final String flavorName;
@@ -18,8 +19,11 @@ class AppConfig {
     required this.apiBaseUrl,
   });
 }
+
 void main() {
-  const String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost');
+  const String baseUrl = String.fromEnvironment(
+      'https://housing.skyviewads.com/',
+      defaultValue: 'http://localhost');
   dynamic configuredApp = AppConfig(
     appName: 'Flutter',
     flavorName: 'development',
@@ -28,6 +32,7 @@ void main() {
   );
   runApp(MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
