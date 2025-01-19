@@ -22,9 +22,10 @@ class AppConfig {
 
 void main() {
   const String baseUrl = String.fromEnvironment(
-      'https://housing.skyviewads.com/',
-      defaultValue: 'http://localhost');
-  dynamic configuredApp = AppConfig(
+    'https://venu8985.github.io',
+    defaultValue: 'http://localhost', // Fallback URL if not provided
+  );
+  AppConfig(
     appName: 'Flutter',
     flavorName: 'development',
     appVersion: 1.0,
