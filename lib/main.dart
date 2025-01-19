@@ -3,12 +3,31 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
-import 'package:confetti/confetti.dart';
+
 import 'package:spin/screens/homeScreen/home_screen.dart';
+class AppConfig {
+  final String appName;
+  final String flavorName;
+  final double appVersion;
+  final String apiBaseUrl;
 
-void main() => runApp(const MyApp());
-
+  AppConfig({
+    required this.appName,
+    required this.flavorName,
+    required this.appVersion,
+    required this.apiBaseUrl,
+  });
+}
+void main() {
+  const String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost');
+  dynamic configuredApp = AppConfig(
+    appName: 'Flutter',
+    flavorName: 'development',
+    appVersion: 1.0,
+    apiBaseUrl: baseUrl,
+  );
+  runApp(MyApp());
+}
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
