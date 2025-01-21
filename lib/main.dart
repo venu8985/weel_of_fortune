@@ -22,12 +22,12 @@ class AppConfig {
 
 void main() {
   const String baseUrl = String.fromEnvironment(
-    'https://venu8985.github.io',
-    defaultValue: 'http://localhost', // Fallback URL if not provided
+    'https://wheel.skyviewads.com',
+    defaultValue: 'http://localhost',
   );
   AppConfig(
     appName: 'Flutter',
-    flavorName: 'development',
+    flavorName: 'SurveyTech',
     appVersion: 1.0,
     apiBaseUrl: baseUrl,
   );
@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Weel of fortune',
+      title: 'SERVEY.TECH Spin To Win',
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),

@@ -1,13 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:math';
+import 'package:assets_audio_player/assets_audio_player.dart';
+
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
 import 'package:confetti/confetti.dart';
+import 'package:lottie/lottie.dart';
+import 'package:simple_gradient_text/simple_gradient_text.dart';
 import 'package:spin/controllers/homeControllers/homeController.dart';
-import 'package:spin/models/homeModels/homeModel.dart';
+import 'package:spin/screens/widgets/indicator_painter_widget.dart';
+import 'package:spin/screens/widgets/winner_widget.dart';
+import 'package:toastification/toastification.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,344 +20,404 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  StreamController<int> selected = StreamController<int>();
+  StreamController<int> selected = StreamController<int>.broadcast();
   late ConfettiController _centerController;
+
   Homecontroller homecontroller = Get.put(Homecontroller());
-  @override
-  void initState() {
-    super.initState();
-    homecontroller.getLunchIdeas();
-    _centerController =
-        ConfettiController(duration: const Duration(seconds: 10));
-  }
+  final AssetsAudioPlayer _audioPlayer = AssetsAudioPlayer();
 
   @override
-  void dispose() {
-    selected.close();
-    _centerController.dispose();
-    super.dispose();
+  void initState() {
+    homecontroller.fetchDepartments(context);
+
+    _centerController =
+        ConfettiController(duration: const Duration(seconds: 10));
+    super.initState();
   }
+
+  bool canSpin = false;
 
   @override
   Widget build(BuildContext context) {
-    var flag = false;
+    bool flag = false;
+    return PopScope(
+      canPop: false,
+      child: Scaffold(body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final screenHeight = constraints.maxHeight;
 
-    return Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: const Text('Weel of fortune'),
-        ),
-        body: Obx(() {
-          return homecontroller.ideas.length > 2
-              ? Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selected.add(
-                          Fortune.randomInt(0, homecontroller.ideas.length),
-                        );
-                      });
-                    },
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              CircularContainerWithSectors(),
-                              Container(
-                                width: MediaQuery.of(context).size.width / 1.4,
-                                height: MediaQuery.of(context).size.width / 1.4,
-                                child: FortuneWheel(
-                                  duration: Duration(seconds: 15),
-                                  physics: CircularPanPhysics(),
-                                  indicators: <FortuneIndicator>[
-                                    FortuneIndicator(
-                                      alignment: Alignment.topCenter,
-                                      child: TriangleIndicator(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                  selected: selected.stream,
-                                  items: [
-                                    for (int i = 0;
-                                        i < homecontroller.ideas.length;
-                                        i++)
-                                      // FortuneItem(
-                                      //   child: Text(it.meal),
-                                      // ),
-                                      FortuneItem(
-                                        style: FortuneItemStyle(
-                                            textAlign: TextAlign.end,
-                                            color: i % 2 == 0
-                                                ? Colors.red
-                                                : Colors.red.shade200,
-                                            borderColor: (i % 2 == 0
-                                                ? Colors.red
-                                                : Colors.red.shade200),
-                                            borderWidth: (10.0)),
-                                        child: Transform(
-                                          transform: Matrix4.identity()
-                                            ..scale((1.0))
-                                            ..setEntry(3, 2, 0.002)
-                                            ..rotateX((0.1)),
-                                          alignment: Alignment.center,
-                                          child: _buildFortuneItem(
-                                            homecontroller.ideas[i].img,
-                                            homecontroller.ideas[i].meal,
-                                            i % 2 == 0
-                                                ? Colors.red
-                                                : Colors.red.shade200,
-                                            context,
+            return Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Obx(() {
+                return Column(
+                  children: [
+                    appLogo(screenWidth, screenHeight),
+                    departmentSelection(screenWidth, screenHeight, context),
+                    Expanded(
+                      child: homecontroller.dropdownValue.value ==
+                                  "Choose Department" &&
+                              homecontroller.dropdownValue.value == ''
+                          ? Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(screenHeight * 0.10),
+                                child: Image(
+                                    height: screenHeight,
+                                    width: screenWidth,
+                                    fit: BoxFit.contain,
+                                    image: AssetImage(
+                                        'assets/images/no_image.png')),
+                              ),
+                            )
+                          : Obx(() {
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  homecontroller.isLoadingEmployees.value
+                                      ? Padding(
+                                          padding: EdgeInsets.all(
+                                              screenHeight / 2 * 0.02),
+                                          child: Lottie.asset(
+                                            'assets/animations/loader.json',
+                                            height: screenHeight / 2,
+                                            width: screenWidth / 2,
+                                            fit: BoxFit.contain,
                                           ),
-                                        ),
-                                      ),
-                                  ],
-                                  onAnimationEnd: () {
-                                    _centerController.play();
-                                    showDialog(
-                                        barrierDismissible: true,
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return Center(
-                                            child: AlertDialog(
-                                              scrollable: true,
-                                              title: Text(
-                                                  "Hurray! today's meal is????"),
-                                              content: Column(
-                                                children: [
-                                                  ConfettiWidget(
-                                                      confettiController:
-                                                          _centerController,
-                                                      blastDirection: pi / 2,
-                                                      maxBlastForce: 5,
-                                                      minBlastForce: 2,
-                                                      emissionFrequency: 0.03,
-                                                      numberOfParticles: 10,
-                                                      gravity: 0),
-                                                  SizedBox(height: 10),
-                                                  Text(
-                                                    homecontroller
-                                                        .selectedIdea.value,
-                                                    style:
-                                                        TextStyle(fontSize: 22),
-                                                  ),
-                                                  SizedBox(height: 20),
-                                                  Image.network(homecontroller
-                                                      .selectedImg.value),
-                                                ],
-                                              ),
+                                        )
+                                      : homecontroller.employeeList.length > 1
+                                          ? spinnerWidget(
+                                              screenWidth, flag, context)
+                                          : Padding(
+                                              padding: EdgeInsets.all(
+                                                  screenHeight / 2 * 0.02),
+                                              child: Image(
+                                                  height: screenHeight / 2,
+                                                  width: screenWidth / 2,
+                                                  fit: BoxFit.contain,
+                                                  image: AssetImage(
+                                                      'assets/images/no_image.png')),
                                             ),
-                                          );
-                                        });
-                                  },
-                                  onFocusItemChanged: (value) {
-                                    if (flag == true) {
-                                      homecontroller.setValue(value);
-                                    } else {
-                                      flag = true;
-                                    }
-                                  },
-                                ),
-                              ),
-                              Container(
-                                height: 110,
-                                width: 110,
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                        color: Colors.white, width: 1)),
-                              ),
-                              Positioned(
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Container(
-                                      child: Image.asset(
-                                        'assets/colorWeelIcon.png',
-                                        fit: BoxFit.contain,
-                                        height: 100,
-                                        width: 100,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Color weel',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    selected.add(
-                                      Fortune.randomInt(
-                                          0, homecontroller.ideas.length),
-                                    );
-                                  });
-                                },
-                                child: Text('Start to role')),
-                          )
-                        ],
-                      ),
+                                  contentWidget(
+                                      screenWidth, flag, screenHeight),
+                                ],
+                              );
+                            }),
                     ),
-                  ),
-                )
-              : Center(
-                  child: CircularProgressIndicator(color: Colors.green),
+                  ],
                 );
-        }));
+              }),
+            );
+          },
+        ),
+      )),
+    );
   }
 
-  Widget _buildFortuneItem(
-      String emoji, String title, Color color, BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width / 2,
-      height: MediaQuery.of(context).size.height / 2,
+  Expanded contentWidget(double screenWidth, bool flag, double screenHeight) {
+    return Expanded(
+      flex: 3,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.03,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GradientText(
+              'It\'s Spinny Winny Time!',
+              style: TextStyle(
+                fontSize: screenWidth * 0.03,
+                fontWeight: FontWeight.bold,
+              ),
+              colors: [
+                Color(0xFF1A69A5),
+                Color(0xFF31949C),
+                Color(0xFF43B890),
+                Color(0xFF74C488),
+                Color(0xFFA3C897),
+              ],
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            Text(
+              'Get Lucky the First Time, Unlock Special Gifts by spinning the wheel!',
+              style: TextStyle(
+                fontSize: screenWidth * 0.02,
+              ),
+            ),
+            SizedBox(height: screenHeight * 0.02),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.0),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xff1A69A5),
+                    const Color(0xff17869E),
+                    const Color(0xff36A097),
+                    const Color(0xff3EAC93),
+                    const Color(0xff61C08D),
+                    const Color(0xff84C98B),
+                    const Color(0xffA1D292)
+                  ],
+                ),
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                ),
+                onPressed: () {
+                  flag = true;
+                  canSpin = true;
+                  if (homecontroller.employeeList.length < 2) {
+                    toastification.show(
+                      context: context,
+                      title: 'Error',
+                      description: 'Sorry! No Employees found',
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      autoCloseDuration: const Duration(seconds: 6),
+                    );
+                  } else {
+                    selected.add(
+                      Fortune.randomInt(0, homecontroller.employeeList.length),
+                    );
+                  }
+                },
+                child: Text(
+                  'Try my luck',
+                  style: TextStyle(
+                      fontSize: screenWidth * 0.02, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Expanded spinnerWidget(double screenWidth, bool flag, BuildContext context) {
+    return Expanded(
+      flex: 2,
       child: Stack(
+        alignment: Alignment.center,
         children: [
           Container(
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.rectangle,
+            child: Image.asset(
+              'assets/images/spin_background.png',
+              fit: BoxFit.contain,
+              width: screenWidth * 0.4,
+              height: screenWidth * 0.4,
             ),
           ),
-          Opacity(
-            opacity: 0.3,
-            child: Image.network(
-              emoji, fit: BoxFit.cover,
-              // width: 20,
-              // height: 20,
-            ),
-          ),
-          Align(
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding:
-                  const EdgeInsets.only(left: 30, top: 4, bottom: 4, right: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Image.network(
-                  //   emoji,
-                  //   width: 20,
-                  //   height: 20,
-                  // ),
-                  // Text(
-                  //   emoji,
-                  //   style: TextStyle(fontSize: 14),
-                  // ),
-                  SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+          Container(
+            width: screenWidth * 0.34,
+            height: screenWidth * 0.34,
+            child: FortuneWheel(
+              duration: const Duration(seconds: 2),
+              physics: CircularPanPhysics(),
+              onFocusItemChanged: (value) {
+                if (flag == true) {
+                  homecontroller.setValue(value);
+                } else {
+                  flag = true;
+                }
+              },
+              animateFirst: false,
+              onAnimationEnd: () async {
+                if (canSpin) {
+                  flag = true;
+
+                  _centerController.play();
+                  _audioPlayer.open(
+                    Audio("assets/audios/congratulations.mp3"),
+                    autoStart: true,
+                    showNotification: true,
+                  );
+                  await showDialog(
+                    barrierDismissible: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return WinnerWidget(
+                        centerController: _centerController,
+                        homecontroller: homecontroller,
+                        screenWidth: screenWidth,
+                      );
+                    },
+                  ).then((valueFromDialog) async {
+                    await _audioPlayer.stop();
+                    homecontroller.deleteEmployee(
+                        context, homecontroller.selectedEmpId.value);
+
+                    print(valueFromDialog);
+                  });
+                }
+              },
+              indicators: <FortuneIndicator>[
+                FortuneIndicator(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: screenWidth * 0.05,
+                    height: screenWidth * 0.05,
+                    child: CustomPaint(
+                      painter: IndicatorPainterWidget(
+                          color: const Color(0xffFEF88C)),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
                   ),
-                ],
-              ),
+                ),
+              ],
+              selected: selected.stream,
+              items: [
+                for (int i = 0; i < homecontroller.employeeList.length; i++)
+                  FortuneItem(
+                    style: homecontroller.employeeList.length < 5
+                        ? FortuneItemStyle(
+                            color: i % 2 == 0
+                                ? Color(0xFF1A69A5).withOpacity(0.02)
+                                : const Color(0xFFFCFCFC),
+                          )
+                        : FortuneItemStyle(),
+                    child: fortuneItemContainer(i, screenWidth),
+                  ),
+              ],
+            ),
+          ),
+          Positioned(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      gradient: RadialGradient(colors: [
+                        Color(0xFF8BCB8D),
+                        Color(0xFF38A296),
+                        Color(0xFF2074A3),
+                        Color(0xFFD9B84F)
+                      ])),
+                  height: screenWidth * 0.03,
+                  width: screenWidth * 0.03,
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class CircularContainerWithSectors extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width / 1.2,
-      height: MediaQuery.of(context).size.width / 1.2,
-      child: CustomPaint(
-        painter: CircleWithSectorsPainter(
-          numSectors: 5,
-          sectorColors: [
-            Color(0xFF000000),
-            Color(0xFF0C57E9),
-            Color(0xFFDBC928),
-            Color(0xFF972492),
-            Color(0xFFF12222),
-            Color(0xFF248E31),
-          ],
+  Card departmentSelection(
+      double screenWidth, double screenHeight, BuildContext context) {
+    return Card(
+      elevation: 5,
+      margin:
+          EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 30),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.04,
+          vertical: screenHeight * 0.01,
         ),
-        child: Center(
-          child: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            canvasColor: Colors.white,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
           ),
+          child: Obx(() {
+            return DropdownButton(
+              onTap: () {
+                homecontroller.fetchDepartments(context);
+              },
+              elevation: 0,
+              dropdownColor: Colors.white,
+              isDense: true,
+              value: homecontroller.dropdownValue.value,
+              focusColor: Colors.transparent,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.keyboard_arrow_down),
+              items: homecontroller.departmentOptions.map((String item) {
+                return DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    maxLines: 1,
+                    item,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null && newValue != "Choose Department") {
+                  setState(() {
+                    homecontroller.dropdownValue.value = newValue;
+                  });
+
+                  homecontroller.departmentCode.value =
+                      newValue.split(' - ')[0];
+
+                  homecontroller.fetchEmployees(
+                      context, homecontroller.departmentCode.value);
+                  print(homecontroller.employeeList.length);
+                }
+              },
+            );
+          }),
         ),
       ),
     );
   }
-}
 
-class CircleWithSectorsPainter extends CustomPainter {
-  final int numSectors;
-  final List<Color> sectorColors;
+  Align appLogo(double screenWidth, double screenHeight) {
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Padding(
+        padding: EdgeInsets.all(screenWidth * 0.02),
+        child: Image.asset(
+          'assets/images/logo.png',
+          fit: BoxFit.cover,
+          height: screenHeight * 0.05,
+        ),
+      ),
+    );
+  }
 
-  CircleWithSectorsPainter({
-    required this.numSectors,
-    required this.sectorColors,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    double radius = size.width / 2;
-    double centerX = size.width / 2;
-    double centerY = size.height / 2;
-    double sweepAngle = 2 * pi / numSectors;
-    double startAngle = -pi / 2;
-
-    double spaceBetweenSectors = 4;
-    double borderWidth = 8;
-
-    double innerRadius = radius - borderWidth - spaceBetweenSectors;
-
-    for (int i = 0; i < numSectors; i++) {
-      Paint sectorPaint = Paint()
-        ..color = sectorColors[i % sectorColors.length]
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = borderWidth;
-
-      double angleStart =
-          startAngle + i * sweepAngle + spaceBetweenSectors / innerRadius;
-
-      canvas.drawArc(
-        Rect.fromCircle(center: Offset(centerX, centerY), radius: innerRadius),
-        angleStart,
-        sweepAngle - 2 * spaceBetweenSectors / innerRadius,
-        false,
-        sectorPaint,
-      );
-    }
-
-    Paint innerCirclePaint = Paint()..color = Colors.white;
-    canvas.drawCircle(Offset(centerX, centerY),
-        radius - borderWidth - spaceBetweenSectors - 5, innerCirclePaint);
+  Container fortuneItemContainer(i, double screenWidth) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.red,
+        gradient: LinearGradient(
+          colors: i % 2 == 0
+              ? [
+                  const Color(0xFF1A69A5),
+                  const Color(0xFF74C488),
+                ]
+              : [
+                  const Color(0xFFFCFCFC),
+                  const Color(0xFFFCFCFC),
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        homecontroller.employeeList[i].empName!,
+        style: TextStyle(
+          fontSize: screenWidth * 0.01,
+        ),
+      ),
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  void dispose() {
+    selected.close();
+    _centerController.dispose();
+
+    super.dispose();
   }
 }
