@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:assets_audio_player/assets_audio_player.dart';
 
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
@@ -121,84 +123,100 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: EdgeInsets.symmetric(
           horizontal: screenWidth * 0.03,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GradientText(
-              'It\'s Spinny Winny Time!',
-              style: TextStyle(
-                fontSize: screenWidth * 0.03,
-                fontWeight: FontWeight.bold,
-              ),
-              colors: [
-                Color(0xFF1A69A5),
-                Color(0xFF31949C),
-                Color(0xFF43B890),
-                Color(0xFF74C488),
-                Color(0xFFA3C897),
-              ],
-            ),
-            SizedBox(height: screenHeight * 0.02),
-            Flexible(
-              child: Text(
-                'Get Lucky the First Time, Unlock Special Gifts by spinning the wheel!',
-                style: TextStyle(
-                  fontSize: screenWidth * 0.02,
-                ),
-              ),
-            ),
-            SizedBox(height: screenHeight * 0.02),
-            Flexible(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  gradient: LinearGradient(
+        child: AnimationLimiter(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: AnimationConfiguration.toStaggeredList(
+                duration: const Duration(milliseconds: 500),
+                childAnimationBuilder: (widget) => SlideAnimation(
+                      horizontalOffset: 50.0,
+                      child: FadeInAnimation(
+                        child: widget,
+                      ),
+                    ),
+                children: [
+                  GradientText(
+                    'It\'s Spinny Winny Time!',
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.03,
+                      fontWeight: FontWeight.bold,
+                    ),
                     colors: [
-                      const Color(0xff1A69A5),
-                      const Color(0xff17869E),
-                      const Color(0xff36A097),
-                      const Color(0xff3EAC93),
-                      const Color(0xff61C08D),
-                      const Color(0xff84C98B),
-                      const Color(0xffA1D292)
+                      Color(0xFF1A69A5),
+                      Color(0xFF31949C),
+                      Color(0xFF43B890),
+                      Color(0xFF74C488),
+                      Color(0xFFA3C897),
                     ],
                   ),
-                ),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                  ),
-                  onPressed: () {
-                    flag = true;
-                    canSpin = true;
-                    if (homecontroller.employeeList.length < 2) {
-                      toastification.show(
-                        context: context,
-                        title: 'Error',
-                        description: 'Sorry! No Employees found',
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        autoCloseDuration: const Duration(seconds: 6),
-                      );
-                    } else {
-                      selected.add(
-                        Fortune.randomInt(
-                            0, homecontroller.employeeList.length),
-                      );
-                    }
-                  },
-                  child: Text(
-                    'Try my luck',
+                  SizedBox(height: screenHeight * 0.02),
+                  Text(
+                    'Get Lucky the First Time, Unlock Special Gifts by spinning the wheel!',
                     style: TextStyle(
-                        fontSize: screenWidth * 0.02, color: Colors.white),
+                      fontSize: screenWidth * 0.02,
+                    ),
                   ),
-                ),
-              ),
-            ),
-          ],
+                  SizedBox(height: screenHeight * 0.02),
+                  Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(
+                              0.3), // Adjust opacity for shadow intensity
+                          blurRadius: 10.0, // How much to blur the shadow
+                          offset: Offset(2, 4), // Offset the shadow position
+                        ),
+                      ],
+                      borderRadius: BorderRadius.circular(10.0),
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xff1A69A5),
+                          const Color(0xff17869E),
+                          const Color(0xff36A097),
+                          const Color(0xff3EAC93),
+                          const Color(0xff61C08D),
+                          const Color(0xff84C98B),
+                          const Color(0xffA1D292)
+                        ],
+                      ),
+                    ),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                      ),
+                      onPressed: () {
+                        flag = true;
+                        canSpin = true;
+                        if (homecontroller.employeeList.length < 2) {
+                          toastification.show(
+                            primaryColor: Colors.white,
+                            context: context,
+                            icon: Icon(Icons.error),
+                            title: 'Error',
+                            description: 'Sorry! No Employees Found',
+                            backgroundColor: Colors.red[300],
+                            foregroundColor: Colors.white,
+                            autoCloseDuration: const Duration(seconds: 6),
+                          );
+                        } else {
+                          selected.add(
+                            Fortune.randomInt(
+                                0, homecontroller.employeeList.length),
+                          );
+                        }
+                      },
+                      child: Text(
+                        'Try my luck',
+                        style: TextStyle(
+                            fontSize: screenWidth * 0.02, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ]),
+          ),
         ),
       ),
     );
@@ -235,70 +253,80 @@ class _HomeScreenState extends State<HomeScreen> {
             width: screenWidth * 0.32,
             height: screenWidth * 0.32,
             child: FortuneWheel(
-              duration: const Duration(seconds: 2),
-              physics: CircularPanPhysics(),
-              onFocusItemChanged: (value) {
-                if (flag == true) {
-                  homecontroller.setValue(value);
-                } else {
-                  flag = true;
-                }
-              },
-              animateFirst: false,
-              onAnimationEnd: () async {
-                if (canSpin) {
-                  flag = true;
+                duration: const Duration(seconds: 2),
+                physics: CircularPanPhysics(),
+                onFocusItemChanged: (value) {
+                  if (flag == true) {
+                    homecontroller.setValue(value);
+                  } else {
+                    flag = true;
+                  }
+                },
+                animateFirst: false,
+                onAnimationEnd: () async {
+                  if (canSpin) {
+                    flag = true;
 
-                  _centerController.play();
-                  _audioPlayer.open(
-                    Audio("assets/audios/congratulations.mp3"),
-                    autoStart: true,
-                    showNotification: true,
-                  );
-                  await showDialog(
-                    barrierDismissible: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return WinnerWidget(
-                        centerController: _centerController,
-                        homecontroller: homecontroller,
-                        screenWidth: screenWidth,
-                      );
-                    },
-                  ).then((valueFromDialog) async {
-                    await _audioPlayer.stop();
-                    homecontroller.deleteEmployee(
-                        context, homecontroller.selectedEmpId.value);
+                    _centerController.play();
+                    _audioPlayer.open(
+                      Audio("assets/audios/congratulations.mp3"),
+                      autoStart: true,
+                      showNotification: true,
+                    );
+                    await showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (BuildContext context) {
+                        return WinnerWidget(
+                          centerController: _centerController,
+                          homecontroller: homecontroller,
+                          screenWidth: screenWidth,
+                        );
+                      },
+                    ).then((valueFromDialog) async {
+                      await _audioPlayer.stop();
+                      homecontroller.deleteEmployee(
+                          context, homecontroller.selectedEmpId.value);
 
-                    print(valueFromDialog);
-                  });
-                }
-              },
-              indicators: <FortuneIndicator>[
-                FortuneIndicator(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    width: screenWidth * 0.05,
-                    height: screenWidth * 0.05,
-                    child: CustomPaint(
-                      painter: IndicatorPainterWidget(
-                          color: const Color(0xffFEF88C)),
+                      print(valueFromDialog);
+                    });
+                  }
+                },
+                indicators: <FortuneIndicator>[
+                  FortuneIndicator(
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      width: screenWidth * 0.04,
+                      height: screenWidth * 0.04,
+                      child: CustomPaint(
+                        painter: IndicatorPainterWidget(
+                            color: const Color(0xffFEF88C)),
+                      ),
                     ),
                   ),
+                ],
+                selected: selected.stream,
+                items: [
+                  for (int i = 0; i < homecontroller.employeeList.length; i++)
+                    FortuneItem(
+                        style: FortuneItemStyle(
+                            borderColor: Colors.white,
+                            color: Color(0xFF1A69A5).withOpacity(0.02)),
+                        child: fortuneItemContainer(i, screenWidth,
+                            homecontroller.employeeList.length)),
+                ]
+                // : [
+                //     for (int i = 0;
+                //         i < homecontroller.employeeList.length;
+                //         i++)
+                //       FortuneItem(
+                //           style: FortuneItemStyle(
+                //               borderColor: Colors.white,
+                //               color: Color(0xFF1A69A5).withOpacity(0.02)),
+                //           child: fortuneItemContainer(
+                //               i, screenWidth, homecontroller.employeeList.length)),
+                //   ],
                 ),
-              ],
-              selected: selected.stream,
-              items: [
-                for (int i = 0; i < homecontroller.employeeList.length; i++)
-                  FortuneItem(
-                      style: homecontroller.employeeList.length < 6
-                          ? FortuneItemStyle(
-                              borderColor: Colors.white,
-                              color: Color(0xFF1A69A5).withOpacity(0.02))
-                          : FortuneItemStyle(),
-                      child: fortuneItemContainer(i, screenWidth)),
-              ],
-            ),
           ),
           Positioned(
             child: Stack(
@@ -401,15 +429,15 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Padding(
         padding: EdgeInsets.all(screenWidth * 0.02),
         child: Image.asset(
-          'assets/images/logo.png',
+          'assets/images/logo1.png',
           fit: BoxFit.cover,
-          height: screenHeight * 0.05,
+          height: screenHeight * 0.07,
         ),
       ),
     );
   }
 
-  Container fortuneItemContainer(i, double screenWidth) {
+  Container fortuneItemContainer(i, double screenWidth, int dataLength) {
     return Container(
       decoration: BoxDecoration(
           // color: Colors.red,
@@ -427,10 +455,15 @@ class _HomeScreenState extends State<HomeScreen> {
           //   end: Alignment.bottomRight,
           // ),
           ),
-      alignment: Alignment.center,
+      alignment: dataLength < 20 ? Alignment.center : Alignment.centerRight,
       child: Text(
-        homecontroller.employeeList[i].empName!,
-        style: TextStyle(fontSize: screenWidth * 0.01, color: Colors.white),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        homecontroller.employeeList[i].empName ?? "Unknown",
+        style: TextStyle(
+            fontSize:
+                dataLength < 20 ? screenWidth * 0.01 : screenWidth * 0.007,
+            color: Colors.white),
       ),
     );
   }

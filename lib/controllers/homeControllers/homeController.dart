@@ -30,8 +30,8 @@ class Homecontroller extends GetxController {
       http.Response response = await http.get(url);
       print(response.statusCode);
       print(response.body);
+      Map<String, dynamic> jsonData = json.decode(response.body);
       if (response.statusCode == 200) {
-        Map<String, dynamic> jsonData = json.decode(response.body);
         if (jsonData['data'] != null) {
           List<dynamic> departments = jsonData['data'];
 
@@ -49,9 +49,9 @@ class Homecontroller extends GetxController {
         toastification.show(
           context: context,
           title: 'Error',
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.red[300],
           foregroundColor: Colors.white,
-          description: response.reasonPhrase.toString(),
+          description: response.reasonPhrase ?? jsonData['message'],
           autoCloseDuration: const Duration(seconds: 6),
         );
       }
@@ -62,7 +62,7 @@ class Homecontroller extends GetxController {
         context: context,
         title: 'Error',
         description: e.toString(),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red[300],
         foregroundColor: Colors.white,
         autoCloseDuration: const Duration(seconds: 6),
       );
@@ -79,9 +79,8 @@ class Homecontroller extends GetxController {
           "https://servey.tech/api/employee/${departmentCode.trim()}");
       http.Response response =
           await http.get(url, headers: {"Access-Control-Allow-Origin": "*"});
-
+      Map<String, dynamic> jsonData = json.decode(response.body);
       if (response.statusCode == 200) {
-        Map<String, dynamic> jsonData = json.decode(response.body);
         if (jsonData['data'] != null) {
           employeeList.value = jsonData['data']
               .map<EmplyeeData>((item) => EmplyeeData.fromJson(item))
@@ -90,16 +89,31 @@ class Homecontroller extends GetxController {
           print(employeeList);
         } else {
           employeeList.clear();
+          toastification.show(
+              context: context,
+              title: 'Error',
+              description: jsonData['message'].toString(),
+              backgroundColor: Colors.red[300],
+              foregroundColor: Colors.white,
+              autoCloseDuration: const Duration(seconds: 6));
         }
       } else {
         print("Failed to load employees");
+        toastification.show(
+            context: context,
+            title: 'Error',
+            description:
+                response.reasonPhrase ?? jsonData['message'].toString(),
+            backgroundColor: Colors.red[300],
+            foregroundColor: Colors.white,
+            autoCloseDuration: const Duration(seconds: 6));
       }
     } catch (e) {
       toastification.show(
         context: context,
         title: 'Error',
         description: e.toString(),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red[300],
         foregroundColor: Colors.white,
         autoCloseDuration: const Duration(seconds: 6),
       );
@@ -127,7 +141,7 @@ class Homecontroller extends GetxController {
             context: context,
             title: 'Error',
             description: jsonData['message'].toString(),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red[300],
             foregroundColor: Colors.white,
             autoCloseDuration: const Duration(seconds: 6),
           );
@@ -137,7 +151,7 @@ class Homecontroller extends GetxController {
           context: context,
           title: 'Error',
           description: response.reasonPhrase ?? jsonData['message'].toString(),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.red[300],
           foregroundColor: Colors.white,
           autoCloseDuration: const Duration(seconds: 6),
         );
@@ -148,7 +162,7 @@ class Homecontroller extends GetxController {
         context: context,
         title: 'Error',
         description: e.toString(),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red[300],
         foregroundColor: Colors.white,
         autoCloseDuration: const Duration(seconds: 6),
       );
