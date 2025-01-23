@@ -77,7 +77,8 @@ class Homecontroller extends GetxController {
     try {
       Uri url = Uri.parse(
           "https://servey.tech/api/employee/${departmentCode.trim()}");
-      http.Response response = await http.get(url);
+      http.Response response =
+          await http.get(url, headers: {"Access-Control-Allow-Origin": "*"});
 
       if (response.statusCode == 200) {
         Map<String, dynamic> jsonData = json.decode(response.body);
@@ -116,9 +117,8 @@ class Homecontroller extends GetxController {
       Uri url = Uri.parse(
           "https://servey.tech/api/remove-employee/${employeeCode.trim()}");
       http.Response response = await http.get(url);
-
+      Map<String, dynamic> jsonData = json.decode(response.body);
       if (response.statusCode == 200) {
-        Map<String, dynamic> jsonData = json.decode(response.body);
         if (jsonData['status'] == true) {
           fetchEmployees(context, departmentCode.value);
         } else {
@@ -136,7 +136,7 @@ class Homecontroller extends GetxController {
         toastification.show(
           context: context,
           title: 'Error',
-          description: response.reasonPhrase.toString(),
+          description: response.reasonPhrase ?? jsonData['message'].toString(),
           backgroundColor: Colors.red,
           foregroundColor: Colors.white,
           autoCloseDuration: const Duration(seconds: 6),

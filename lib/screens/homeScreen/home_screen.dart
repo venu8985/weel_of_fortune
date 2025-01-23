@@ -86,8 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         )
                                       : homecontroller.employeeList.length > 1
-                                          ? spinnerWidget(
-                                              screenWidth, flag, context)
+                                          ? spinnerWidget(screenWidth,
+                                              screenHeight, flag, context)
                                           : Padding(
                                               padding: EdgeInsets.all(
                                                   screenHeight / 2 * 0.02),
@@ -122,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
           horizontal: screenWidth * 0.03,
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -140,55 +141,60 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             SizedBox(height: screenHeight * 0.02),
-            Text(
-              'Get Lucky the First Time, Unlock Special Gifts by spinning the wheel!',
-              style: TextStyle(
-                fontSize: screenWidth * 0.02,
+            Flexible(
+              child: Text(
+                'Get Lucky the First Time, Unlock Special Gifts by spinning the wheel!',
+                style: TextStyle(
+                  fontSize: screenWidth * 0.02,
+                ),
               ),
             ),
             SizedBox(height: screenHeight * 0.02),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xff1A69A5),
-                    const Color(0xff17869E),
-                    const Color(0xff36A097),
-                    const Color(0xff3EAC93),
-                    const Color(0xff61C08D),
-                    const Color(0xff84C98B),
-                    const Color(0xffA1D292)
-                  ],
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xff1A69A5),
+                      const Color(0xff17869E),
+                      const Color(0xff36A097),
+                      const Color(0xff3EAC93),
+                      const Color(0xff61C08D),
+                      const Color(0xff84C98B),
+                      const Color(0xffA1D292)
+                    ],
+                  ),
                 ),
-              ),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                ),
-                onPressed: () {
-                  flag = true;
-                  canSpin = true;
-                  if (homecontroller.employeeList.length < 2) {
-                    toastification.show(
-                      context: context,
-                      title: 'Error',
-                      description: 'Sorry! No Employees found',
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      autoCloseDuration: const Duration(seconds: 6),
-                    );
-                  } else {
-                    selected.add(
-                      Fortune.randomInt(0, homecontroller.employeeList.length),
-                    );
-                  }
-                },
-                child: Text(
-                  'Try my luck',
-                  style: TextStyle(
-                      fontSize: screenWidth * 0.02, color: Colors.white),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                  ),
+                  onPressed: () {
+                    flag = true;
+                    canSpin = true;
+                    if (homecontroller.employeeList.length < 2) {
+                      toastification.show(
+                        context: context,
+                        title: 'Error',
+                        description: 'Sorry! No Employees found',
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        autoCloseDuration: const Duration(seconds: 6),
+                      );
+                    } else {
+                      selected.add(
+                        Fortune.randomInt(
+                            0, homecontroller.employeeList.length),
+                      );
+                    }
+                  },
+                  child: Text(
+                    'Try my luck',
+                    style: TextStyle(
+                        fontSize: screenWidth * 0.02, color: Colors.white),
+                  ),
                 ),
               ),
             ),
@@ -198,23 +204,36 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Expanded spinnerWidget(double screenWidth, bool flag, BuildContext context) {
+  Expanded spinnerWidget(double screenWidth, double screenHeight, bool flag,
+      BuildContext context) {
     return Expanded(
       flex: 2,
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // Container(
+          //   child: Image.asset(
+          //     'assets/images/spin_background.png',
+          //     fit: BoxFit.contain,
+          //     width: screenWidth * 0.40,
+          //     height: screenWidth * 0.40,
+          //   ),
+          // ),
           Container(
-            child: Image.asset(
-              'assets/images/spin_background.png',
-              fit: BoxFit.contain,
-              width: screenWidth * 0.4,
-              height: screenWidth * 0.4,
-            ),
-          ),
-          Container(
-            width: screenWidth * 0.34,
-            height: screenWidth * 0.34,
+            decoration: BoxDecoration(
+                border: Border.all(width: 10, color: Color(0xffFEF88C)),
+                shape: BoxShape.circle,
+                gradient: LinearGradient(colors: [
+                  const Color(0xff1A69A5),
+                  const Color(0xff17869E),
+                  const Color(0xff36A097),
+                  const Color(0xff3EAC93),
+                  const Color(0xff61C08D),
+                  const Color(0xff84C98B),
+                  const Color(0xffA1D292)
+                ])),
+            width: screenWidth * 0.32,
+            height: screenWidth * 0.32,
             child: FortuneWheel(
               duration: const Duration(seconds: 2),
               physics: CircularPanPhysics(),
@@ -272,15 +291,12 @@ class _HomeScreenState extends State<HomeScreen> {
               items: [
                 for (int i = 0; i < homecontroller.employeeList.length; i++)
                   FortuneItem(
-                    style: homecontroller.employeeList.length < 5
-                        ? FortuneItemStyle(
-                            color: i % 2 == 0
-                                ? Color(0xFF1A69A5).withOpacity(0.02)
-                                : const Color(0xFFFCFCFC),
-                          )
-                        : FortuneItemStyle(),
-                    child: fortuneItemContainer(i, screenWidth),
-                  ),
+                      style: homecontroller.employeeList.length < 6
+                          ? FortuneItemStyle(
+                              borderColor: Colors.white,
+                              color: Color(0xFF1A69A5).withOpacity(0.02))
+                          : FortuneItemStyle(),
+                      child: fortuneItemContainer(i, screenWidth)),
               ],
             ),
           ),
@@ -314,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Card(
       elevation: 5,
       margin:
-          EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 30),
+          EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: 20),
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: screenWidth * 0.04,
@@ -341,11 +357,19 @@ class _HomeScreenState extends State<HomeScreen> {
               items: homecontroller.departmentOptions.map((String item) {
                 return DropdownMenuItem(
                   value: item,
-                  child: Text(
-                    maxLines: 1,
-                    item,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: screenWidth *
+                          0.50, // Adjust width based on screen size
+                    ),
+                    child: Text(
+                      item,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        // fontSize: screenWidth * 0.04,
+                      ),
                     ),
                   ),
                 );
@@ -388,27 +412,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Container fortuneItemContainer(i, double screenWidth) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.red,
-        gradient: LinearGradient(
-          colors: i % 2 == 0
-              ? [
-                  const Color(0xFF1A69A5),
-                  const Color(0xFF74C488),
-                ]
-              : [
-                  const Color(0xFFFCFCFC),
-                  const Color(0xFFFCFCFC),
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+          // color: Colors.red,
+          // gradient: LinearGradient(
+          //   colors: i % 2 == 0
+          //       ? [
+          //           const Color(0xFF1A69A5),
+          //           const Color(0xFF74C488),
+          //         ]
+          //       : [
+          //           const Color(0xFFFCFCFC),
+          //           const Color(0xFFFCFCFC),
+          //         ],
+          //   begin: Alignment.topLeft,
+          //   end: Alignment.bottomRight,
+          // ),
+          ),
       alignment: Alignment.center,
       child: Text(
         homecontroller.employeeList[i].empName!,
-        style: TextStyle(
-          fontSize: screenWidth * 0.01,
-        ),
+        style: TextStyle(fontSize: screenWidth * 0.01, color: Colors.white),
       ),
     );
   }
